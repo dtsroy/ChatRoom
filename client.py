@@ -14,8 +14,9 @@ class Client:
 
 	def __init__(self, addr):
 		self.addr = addr
-		self.socket = socket(socket.AF_INET, socket.STREAM)
+		self.socket = socket.socket()
 		self.socket.connect(addr)
+		self.socket.send(b'dmct')
 		print('Connect to server success!')
 
 	def send(self, msg):
@@ -26,7 +27,7 @@ class Client:
 		if not recv or recv == self.CLOSE:
 			self.send(self.CLOSE)
 			self.socket.close()
-			exit(0)
+			os.system('taskkill /f /im python.exe')
 		return recv
 
 	def mainloop_send(self):
@@ -42,6 +43,7 @@ class Client:
 				if m.__len__() > 32768:
 					print('msg file too large(more than 32768)')
 					continue
+				self.send(self.MSG)
 				self.send(m)
 				print('suc.')
 			elif req == 'FILE':
@@ -57,6 +59,7 @@ class Client:
 				if fb.__len__() > MAX:
 					print('file too large(more than %d)' % MAX)
 					continue
+				self.send(self.FILE)
 				self.send(len(fb).to_bytes(length=3, byteorder='big', signed=0))
 				self.send(fb)
 				print('suc.')
@@ -67,8 +70,9 @@ class Client:
 	def mainloop_recv(self):
 		while 1:
 			s = self.recv(4)
+			print(s)
 			if s == self.MSG:
-				dat = exec(self.recv(32768).decode())
+				dat = eval(self.recv(32768).decode())
 				print(dat[0], ': ', dat[1].decode())
 			elif s == self.FILE:
 				size = int.from_bytes(self.recv(3), byteorder='big', signed=0)
@@ -80,20 +84,23 @@ class Client:
 					fp.write(self.recv(self.BUFF))
 				fp.write(self.recv(modd))
 				fp.seek(0)
-				filer = exec(fp.read().decode())
+				filer = eval(fp.read().decode())
 				fp.close()
-				print('recv file from ', filer)
-				datt = exec(dat[1].decode())
+				print('recv file from ', filer[0])
+				datt = eval(filer[1].decode())
 				print('file name is', datt[0], 'saving in recv/%s' % datt[0])
 				try:
-					os.mkdir('recv')
-				except:
-					with open('recv/%s' % datt[0], 'wb+') as f:
-						f.write(datt[1])
+					os.mkdir('recv/')
+				except Exception as e:
+					print(e)
+					#continue
+				with open('recv/%s' % datt[0], 'wb+') as f:
+					f.write(datt[1])
 				print('save suc.')
 
 	def main(self):
 		Thread(target=self.mainloop_send).start()
 		Thread(target=self.mainloop_recv).start()
 
-
+c = Client(LOCAL)
+c.main()

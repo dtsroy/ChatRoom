@@ -17,6 +17,7 @@ class Connection:
 			popf(_id)
 			return
 		self.conn = conn
+		self.addr = addr
 		self._id = _id
 		self.popf = popf
 
@@ -36,7 +37,9 @@ class Connection:
 
 class Server:
 	BUFF = 8192
-
+	MSG = b'\x00\x00\x00\x01'
+	FILE = b'\x00\x00\x00\x02'
+	CLOSE = b'\x00\x00\x00\x03'
 	def __init__(self, addr):
 		self.socket = socket.socket()
 		self.socket.bind(addr)
@@ -50,13 +53,14 @@ class Server:
 		self.connlst.insert(_id, None)
 
 	def sendtoall(self, msg, flag=None):
+		print('sendall:', msg)
 		for idx, k in enumerate(self.connlst):
+			print(k)
 			if k:
-				if flag != None:
-					if idx != flag:
-						k.send(msg)
-					else:
-						print('Flag', flag, 'stoped send.')
+				if idx != flag:
+					k.send(msg)
+				else:
+					print('Flag', flag, 'stoped send.')
 
 	def connth(self, obj):
 		while 1:
@@ -65,8 +69,10 @@ class Server:
 			if dat == self.MSG:
 				print('recv msg from ', obj.addr)
 				realm = obj.recv(32768)
-				self.sendtoall(self.MSG)
-				self.sendtoall(repr([obj.addr, realm]).encode())
+				self.sendtoall(self.MSG, flag=obj._id)
+				r = repr([obj.addr, realm])
+				print(r)
+				self.sendtoall(r.encode(), flag=obj._id)
 			elif dat == self.FILE:
 				print('recv file from ', obj.addr)
 				size = int.from_bytes(obj.recv(3), byteorder='big', signed=0)
@@ -80,14 +86,14 @@ class Server:
 				fp.seek(0)
 				filer = fp.read()
 				fp.close()
-				self.sendtoall(self.FILE)
+				self.sendtoall(self.FILE, flag=obj._id)
 				# self.sendtoall(size.to_bytes(length=3, byteorder='big', signed=0))
 				# self.sendtoall(filer)
 				bd = repr([obj.addr, filer]).encode()
-				self.sendtoall(len(bd).to_bytes(length=3, byteorder='big', signed=0))
-				self.sendtoall(bd)
+				self.sendtoall(len(bd).to_bytes(length=3, byteorder='big', signed=0), flag=obj._id)
+				self.sendtoall(bd, flag=obj._id)
 			else:
-				obj.sendtoall(repr(obj.addr).encode() + b' has sent an unknown request.')
+				self.sendtoall(repr(obj.addr).encode() + b' has sent an unknown request.', flag=obj._id)
 
 	def mainloop(self):
 		while 1:
@@ -105,7 +111,7 @@ def ccmd():
 	while 1:
 		inp = input('type exit to quit.')
 		if inp == 'exit':
-			system('taskkill /f /im python.exe]')
+			system('taskkill /f /im python.exe')
 
 Thread(target=ccmd, args=()).start()
 
