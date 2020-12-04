@@ -2,6 +2,7 @@ import socket
 from threading import Thread
 from tempfile import TemporaryFile as tf
 from atexit import register
+from os import system
 
 MAX = 16777215
 LOCAL = ('127.0.0.1', 10092)
@@ -57,7 +58,6 @@ class Server:
 					else:
 						print('Flag', flag, 'stoped send.')
 
-
 	def connth(self, obj):
 		while 1:
 			dat = obj.recv(4)
@@ -93,6 +93,17 @@ class Server:
 			self.connlst.append(obj)
 			Thread(target=self.connth, args = (obj,)).start()
 			self.now_id += 1
+
+print('START......')
+s = Server(LOCAL)
+print('Creat Server obj success.')
+def ccmd():
+	while 1:
+		inp = input('type exit to quit.')
+		if inp == 'exit':
+			system('taskkill /f /im python.exe]')
+Thread(target=ccmd, args=()).start()
+s.mainloop()
 
 @register
 def _exit():
