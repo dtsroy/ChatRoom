@@ -9,6 +9,8 @@ class Client:
 	MSG = b'\x00\x00\x00\x01'
 	FILE = b'\x00\x00\x00\x02'
 	CLOSE = b'\x00\x00\x00\x03'
+	BUFF = 8192
+
 	def __init__(self, addr):
 		self.addr = addr
 		self.socket = socket(socket.AF_INET, socket.STREAM)
@@ -65,8 +67,8 @@ class Client:
 		while 1:
 			s = self.recv(4)
 			if s == self.MSG:
-				dat = exec(self.recv(32768))
-				print(dat[0], ': ', dat[1].encode())
+				dat = exec(self.recv(32768).decode())
+				print(dat[0], ': ', dat[1].decode())
 			elif s == self.FILE:
 				size = int.from_bytes(self.recv(3), byteorder='big', signed=0)
 				print('The size is', size)
@@ -74,8 +76,8 @@ class Client:
 				print(times, 'times,', 'other', modd)
 				fp = tf()
 				for k in range(times):
-					fp.write(obj.recv(self.BUFF))
-				fp.write(obj.recv(modd))
+					fp.write(self.recv(self.BUFF))
+				fp.write(self.recv(modd))
 				fp.seek(0)
-				filer = fp.read()
+				filer = fp.read().decode()
 				fp.close()
