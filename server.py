@@ -1,11 +1,14 @@
 import socket
 from threading import Thread
 from tempfile import TemporaryFile as tf
+from atexit import register
 
 MAX = 16777215
+LOCAL = ('127.0.0.1', 10092)
 class Connection:
 	MSG = b'\x00\x00\x00\x01'
 	FILE = b'\x00\x00\x00\x02'
+	CLOSE = b'\x00\x00\x00\x03'
 	def __init__(self, addr, conn, _id, popf):
 		print(addr)
 		if conn.recv(4) != b'dmct':
@@ -24,7 +27,7 @@ class Connection:
 
 	def recv(self, buff=1024):
 		recv = self.conn.recv(buff)
-		if not recv:
+		if not recv or recv == self.CLOSE:
 			self.dell()
 			exit(0)
 		return recv
@@ -45,13 +48,14 @@ class Server:
 		self.connlst.insert(_id, None)
 
 	def sendtoall(self, msg, flag=None):
-		for k in self.connlst:
+		for idx, k in enumerate(self.connlst):
 			if k:
 				if flag != None:
 					if idx != flag:
 						k.send(msg)
 					else:
 						print('Flag', flag, 'stoped send.')
+
 
 	def connth(self, obj):
 		while 1:
@@ -67,22 +71,30 @@ class Server:
 				size = int.from_bytes(obj.recv(3), byteorder='big', signed=0)
 				print('The size is', size)
 				times, modd = size // self.BUFF, size % self.BUFF
-				print(times, 'times', 'ssy', modd)
+				print(times, 'times,', 'other', modd)
 				fp = tf()
 				for k in range(times):
 					fp.write(obj.recv(self.BUFF))
 				fp.write(obj.recv(modd))
-				fp.seed(0)
+				fp.seek(0)
 				filer = fp.read()
 				fp.close()
 				self.sendtoall(self.FILE)
+				self.sendtoall(size.to_bytes(length=3, byteorder='big', signed=0))
+				self.sendtoall(filer)
 			else:
-				obj.p
+				obj.sendtoall(repr(obj.addr).encode() + b' has sent a unknown request.')
 
-	def mianloop(self):
+	def mainloop(self):
 		while 1:
 			conn, addr = self.socket.accept()
 			obj = Connection(addr, conn, self.now_id, self.popfun)
 			self.connlst.append(obj)
 			Thread(target=self.connth, args = (obj,)).start()
 			self.now_id += 1
+
+s = Server(LOCAL)
+s.mainloop()
+@register
+def _exit():
+	print('d')
