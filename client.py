@@ -1,5 +1,6 @@
 import socket
 from threading import Thread
+from tempfile import TemporaryFile as tf
 
 MAX = 16777215
 LOCAL = ('127.0.0.1', 10092)
@@ -67,4 +68,14 @@ class Client:
 				dat = exec(self.recv(32768))
 				print(dat[0], ': ', dat[1].encode())
 			elif s == self.FILE:
-				
+				size = int.from_bytes(self.recv(3), byteorder='big', signed=0)
+				print('The size is', size)
+				times, modd = size // self.BUFF, size % self.BUFF
+				print(times, 'times,', 'other', modd)
+				fp = tf()
+				for k in range(times):
+					fp.write(obj.recv(self.BUFF))
+				fp.write(obj.recv(modd))
+				fp.seek(0)
+				filer = fp.read()
+				fp.close()

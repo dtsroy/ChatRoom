@@ -87,7 +87,7 @@ class Server:
 				self.sendtoall(len(bd).to_bytes(length=3, byteorder='big', signed=0))
 				self.sendtoall(bd)
 			else:
-				obj.sendtoall(repr(obj.addr).encode() + b' has sent a unknown request.')
+				obj.sendtoall(repr(obj.addr).encode() + b' has sent an unknown request.')
 
 	def mainloop(self):
 		while 1:
