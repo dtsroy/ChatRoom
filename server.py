@@ -5,6 +5,7 @@ from atexit import register
 
 MAX = 16777215
 LOCAL = ('127.0.0.1', 10092)
+
 class Connection:
 	MSG = b'\x00\x00\x00\x01'
 	FILE = b'\x00\x00\x00\x02'
@@ -93,8 +94,8 @@ class Server:
 			Thread(target=self.connth, args = (obj,)).start()
 			self.now_id += 1
 
-s = Server(LOCAL)
-s.mainloop()
 @register
 def _exit():
-	print('d')
+	s.sendtoall(b'\x00\x00\x00\x03')
+	for k in s.connlst:
+		k.dell()
