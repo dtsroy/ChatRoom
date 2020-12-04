@@ -64,4 +64,7 @@ class Client:
 		while 1:
 			s = self.recv(4)
 			if s == self.MSG:
-				print(self.recv(32768).encode())
+				dat = exec(self.recv(32768))
+				print(dat[0], ': ', dat[1].encode())
+			elif s == self.FILE:
+				

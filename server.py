@@ -66,7 +66,7 @@ class Server:
 				print('recv msg from ', obj.addr)
 				realm = obj.recv(32768)
 				self.sendtoall(self.MSG)
-				self.sendtoall(realm)
+				self.sendtoall(repr([obj.addr, realm]).encode())
 			elif dat == self.FILE:
 				print('recv file from ', obj.addr)
 				size = int.from_bytes(obj.recv(3), byteorder='big', signed=0)
@@ -81,8 +81,11 @@ class Server:
 				filer = fp.read()
 				fp.close()
 				self.sendtoall(self.FILE)
-				self.sendtoall(size.to_bytes(length=3, byteorder='big', signed=0))
-				self.sendtoall(filer)
+				# self.sendtoall(size.to_bytes(length=3, byteorder='big', signed=0))
+				# self.sendtoall(filer)
+				bd = repr([obj.addr, filer]).encode()
+				self.sendtoall(len(bd).to_bytes(length=3, byteorder='big', signed=0))
+				self.sendtoall(bd)
 			else:
 				obj.sendtoall(repr(obj.addr).encode() + b' has sent a unknown request.')
 
@@ -97,12 +100,15 @@ class Server:
 print('START......')
 s = Server(LOCAL)
 print('Creat Server obj success.')
+
 def ccmd():
 	while 1:
 		inp = input('type exit to quit.')
 		if inp == 'exit':
 			system('taskkill /f /im python.exe]')
+
 Thread(target=ccmd, args=()).start()
+
 s.mainloop()
 
 @register
