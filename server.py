@@ -1,4 +1,5 @@
 import socket
+from threading import Thread
 
 class Connection:
 	MSG = b'\x00\x00\x00\x01'
@@ -23,12 +24,28 @@ class Connection:
 		recv = self.conn.recv(buff)
 		if not recv:
 			self.dell()
-			return
+			exit(0)
 		return recv
 
-	def header(self, _type, fle):
-		if _type == 'msg':
-			self.send(self.MSG)
-		elif _type == 'file':
-			self.send(self.FILE)
-		_len = len(fle)
+class Server:
+	def __init__(self, addr):
+		self.socket = socket.socket()
+		self.socket.bind(addr)
+		self.socket.listen(5)
+		self.connlst = []
+		self.now_id = 0
+
+	def popfun(self, _id):
+		self.connlst.pop(_id)
+
+	def connth(self, obj):
+		while 1:
+			dat = obj.recv(4)
+
+	def mianloop(self):
+		while 1:
+			conn, addr = self.socket.accept()
+			obj = Connection(addr, conn, self.now_id, self.popfun)
+			self.connlst.append(obj)
+			Thread(target=self.connth, args = (obj,)).start()
+			self.now_id += 1
