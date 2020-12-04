@@ -1,6 +1,7 @@
 import socket
 from threading import Thread
 from tempfile import TemporaryFile as tf
+import os
 
 MAX = 16777215
 LOCAL = ('127.0.0.1', 10092)
@@ -79,5 +80,20 @@ class Client:
 					fp.write(self.recv(self.BUFF))
 				fp.write(self.recv(modd))
 				fp.seek(0)
-				filer = fp.read().decode()
+				filer = exec(fp.read().decode())
 				fp.close()
+				print('recv file from ', filer)
+				datt = exec(dat[1].decode())
+				print('file name is', datt[0], 'saving in recv/%s' % datt[0])
+				try:
+					os.mkdir('recv')
+				except:
+					with open('recv/%s' % datt[0], 'wb+') as f:
+						f.write(datt[1])
+				print('save suc.')
+
+	def main(self):
+		Thread(target=self.mainloop_send).start()
+		Thread(target=self.mainloop_recv).start()
+
+
