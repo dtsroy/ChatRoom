@@ -70,7 +70,7 @@ class Client:
 	def mainloop_recv(self):
 		while 1:
 			s = self.recv(4)
-			print(s)
+			#print(s)
 			if s == self.MSG:
 				dat = eval(self.recv(32768).decode())
 				print(dat[0], ': ', dat[1].decode())

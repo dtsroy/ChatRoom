@@ -12,7 +12,7 @@ class Connection:
 	FILE = b'\x00\x00\x00\x02'
 	CLOSE = b'\x00\x00\x00\x03'
 	def __init__(self, addr, conn, _id, popf):
-		print(addr)
+		print('\n', addr)
 		if conn.recv(4) != b'dmct':
 			popf(_id)
 			return
@@ -55,7 +55,7 @@ class Server:
 	def sendtoall(self, msg, flag=None):
 		print('sendall:', msg)
 		for idx, k in enumerate(self.connlst):
-			print(k)
+			#print(k)
 			if k:
 				if idx != flag:
 					k.send(msg)
@@ -65,13 +65,13 @@ class Server:
 	def connth(self, obj):
 		while 1:
 			dat = obj.recv(4)
-			print(dat)
+			#print(dat)
 			if dat == self.MSG:
 				print('recv msg from ', obj.addr)
 				realm = obj.recv(32768)
 				self.sendtoall(self.MSG, flag=obj._id)
 				r = repr([obj.addr, realm])
-				print(r)
+				#print(r)
 				self.sendtoall(r.encode(), flag=obj._id)
 			elif dat == self.FILE:
 				print('recv file from ', obj.addr)
